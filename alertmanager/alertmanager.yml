@@ -1,0 +1,49 @@
+global:
+  smtp_from: example_mail@example.com
+  smtp_smarthost: smtp.example.com:25
+  smtp_require_tls: false
+
+route:
+  receiver: "default"
+  group_by: ["instance"]
+  group_wait: 1s
+  group_interval: 1s
+  repeat_interval: 60m
+  routes:
+  - match:
+      group: "resources_monitoring"
+    receiver: "resources_monitoring"
+  - match:
+      group: "application_url_monitoring"
+    receiver: "application_url_monitoring"
+
+receivers:
+  - name: "default"
+
+  - name: "resources_monitoring"
+    email_configs:
+      - to: 'example@example.mail.com'
+        send_resolved: true
+        headers:
+          subject: '
+            {{range .Alerts}}
+            {{if eq .Status "firing"}}
+            Alert {{ .Labels.alertname }} fired up: {{.Labels.environment}} - {{.Labels.ansible_node}} - {{.Labels.instance}}
+            {{else}}
+            Alert {{ .Labels.alertname }} was closed: {{.Labels.environment}} - {{.Labels.ansible_node}} - {{.Labels.instance}}
+            {{end}} {{end}}'
+        html: "Alert zasobów!"
+    
+  - name: "application_url_monitoring"
+    email_configs:
+      - to: 'example@example.mail.com'
+        send_resolved: true
+        headers:
+          subject: '
+            {{range .Alerts}}
+            {{if eq .Status "firing"}}
+            Alert {{ .Labels.alertname }} fired up: {{.Labels.environment}} - {{.Labels.ansible_node}} - {{.Labels.instance}}
+            {{else}}
+            Alert {{ .Labels.alertname }} was closed: {{.Labels.environment}} - {{.Labels.ansible_node}} - {{.Labels.instance}}
+            {{end}} {{end}}'
+        html: "Alert aplikacji!"
